@@ -62,10 +62,10 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionAdd_Project"/>
+   <addaction name="actionAddProject"/>
    <addaction name="actionExport"/>
   </widget>
-  <action name="actionAdd_Project">
+  <action name="actionAddProject">
    <property name="text">
     <string>Add Project</string>
    </property>
