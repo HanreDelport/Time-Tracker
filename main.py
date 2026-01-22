@@ -41,6 +41,12 @@ class TimeTrackerApp(QMainWindow):
            # Add to database
            project_id = self.db.add_project(project_name)
            print(f"Added project: {project_name} (ID: {project_id})")
+
+           QMessageBox.information(
+                dialog,                     # parent window (the dialog)
+                "Project Added",             # title of the message box
+                f"The project '{project_name}' has been successfully added!"  # message text
+            )
             
            # Reload the tree
            self.load_projects()
@@ -48,7 +54,20 @@ class TimeTrackerApp(QMainWindow):
            dialog.accept()
        else:
            QMessageBox.warning(self, "Error", "Project name cannot be empty!")
-           
+
+    def reject_project(self, dialog):
+        """Handler for Cancel/Reject button in Add Project dialog"""
+        # Optional: show a confirmation before closing
+        reply = QMessageBox.question(
+            dialog,
+            "Cancel",
+            "Are you sure you want to cancel adding the project?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            dialog.reject()  # Closes the dialog without saving anything
+            
     
     def export_to_csv(self):
         """Handler for Export to CSV button"""
