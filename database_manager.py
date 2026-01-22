@@ -61,7 +61,7 @@ class DatabaseManager:
         """Get all tasks for a specific project"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT id, name, total_seconds, is_finished FROM tasks WHERE project_id = ?', (project_id,))
+        cursor.execute('SELECT id, name, total_seconds, is_finished, is_running FROM tasks WHERE project_id = ?', (project_id,))
         tasks = cursor.fetchall()
         conn.close()
         return tasks
@@ -105,3 +105,28 @@ class DatabaseManager:
         cursor.execute('DELETE FROM tasks WHERE id = ?', (task_id,))
         conn.commit()
         conn.close()
+
+    def start_task(self, task_id):
+        """Mark a task as running"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE tasks SET is_running = 1 WHERE id = ?', (task_id,))
+        conn.commit()
+        conn.close()
+    
+    def pause_task(self, task_id):
+        """Mark a task as paused (not running)"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE tasks SET is_running = 0 WHERE id = ?', (task_id,))
+        conn.commit()
+        conn.close()
+    
+    def get_running_task(self):
+        """Get the currently running task (if any)"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, project_id, name FROM tasks WHERE is_running = 1 LIMIT 1')
+        task = cursor.fetchone()
+        conn.close()
+        return task
