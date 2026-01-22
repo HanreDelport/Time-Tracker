@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QMessageBox, QDialogButtonBox
 from PyQt6 import uic
 from database_manager import DatabaseManager
 
@@ -13,7 +13,7 @@ class TimeTrackerApp(QMainWindow):
         self.db = DatabaseManager()
         
         # Connect toolbar actions to methods
-        self.actionAddProject.triggered.connect(self.add_project)
+        self.actionAddProject.triggered.connect(self.handle_add_buttons)
         self.actionExport.triggered.connect(self.export_to_csv)
         
         # Load projects into the tree
@@ -21,10 +21,34 @@ class TimeTrackerApp(QMainWindow):
         
         print("App initialized successfully!")
     
-    def add_project(self):
-        """Handler for Add Project button"""
-        print("Add Project clicked!")
-        # We'll implement this in the next step
+    def handle_add_buttons(self):
+        # Load the dialog UI
+       dialog = QDialog(self)
+       uic.loadUi('ui/add_project_dialog.ui', dialog)
+      
+
+       dialog.buttonBox.accepted.connect(lambda: self.add_project(dialog))
+       #dialog.buttonBox.rejected.connect(dialog.reject)
+       dialog.exec()
+
+    
+    def add_project(self, dialog):
+       """Handler for Add Project button"""      
+       # Get the project name from the line edit
+       project_name = dialog.projectNameLineEdit.text().strip()
+        
+       if project_name:
+           # Add to database
+           project_id = self.db.add_project(project_name)
+           print(f"Added project: {project_name} (ID: {project_id})")
+            
+           # Reload the tree
+           self.load_projects()
+
+           dialog.accept()
+       else:
+           QMessageBox.warning(self, "Error", "Project name cannot be empty!")
+           
     
     def export_to_csv(self):
         """Handler for Export to CSV button"""
