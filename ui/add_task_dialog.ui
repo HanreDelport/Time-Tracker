@@ -11,23 +11,20 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Add Project</string>
+   <string>Add Task</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Project Name:</string>
+      <string>Task Name:</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QLineEdit" name="projectNameLineEdit">
-     <property name="text">
-      <string/>
-     </property>
+    <widget class="QLineEdit" name="taskNameLineEdit">
      <property name="placeholderText">
-      <string>Enter project name...</string>
+      <string>Enter Task Name...</string>
      </property>
     </widget>
    </item>
