@@ -19,6 +19,12 @@ class TimeTrackerApp(QMainWindow):
         # Load projects into the tree
         self.load_projects()
         self.setup_tree_context_menu()
+
+        # Set column widths
+        self.projectTreeWidget.setColumnWidth(0, 300)  # Name column
+        self.projectTreeWidget.setColumnWidth(1, 100)  # Time column
+        self.projectTreeWidget.setColumnWidth(2, 250)  # Actions column
+        self.projectTreeWidget.setColumnWidth(3, 100)  # Status column
         
         print("App initialized successfully!")
 
@@ -170,6 +176,34 @@ class TimeTrackerApp(QMainWindow):
             
             # Make project item expandable
             project_item.setExpanded(False)
+
+            # Add tasks under this project
+            for task in tasks:
+                task_id, task_name, total_seconds, is_finished, is_running = task
+                
+                # Create a tree item for the task (child of project)
+                task_item = QTreeWidgetItem(project_item)
+                task_item.setText(0, task_name)  # Column 0: Task name
+                
+                # Store the task ID in the item
+                task_item.setData(0, 1, task_id)
+                
+                # Format and display time
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                seconds = total_seconds % 60
+                time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                task_item.setText(1, time_str)  # Column 1: Time
+                
+                # Column 2 will be for action buttons (we'll add these later)
+                
+                # Column 3: Status
+                if is_finished:
+                    task_item.setText(3, "Finished")
+                elif is_running:
+                    task_item.setText(3, "Running")
+                else:
+                    task_item.setText(3, "Paused")
             
 if __name__ == '__main__':
     app = QApplication(sys.argv)
