@@ -13,7 +13,7 @@ class TimeTrackerApp(QMainWindow):
         self.db = DatabaseManager()
         
         # Connect toolbar actions to methods
-        self.actionAddProject.triggered.connect(self.handle_add_project)
+        self.actionAddProject.triggered.connect(self.add_project)
         self.actionExport.triggered.connect(self.export_to_csv)
         
         # Load projects into the tree
@@ -21,54 +21,46 @@ class TimeTrackerApp(QMainWindow):
         self.setup_tree_context_menu()
         
         print("App initialized successfully!")
-    
-    def handle_add_project(self):
-        # Load the dialog UI
-       dialog = QDialog(self)
-       uic.loadUi('ui/add_project_dialog.ui', dialog)
-      
 
-       dialog.buttonBox.accepted.connect(lambda: self.add_project(dialog))
-       dialog.buttonBox.rejected.connect(lambda: self.reject_project(dialog))
-       dialog.exec()
+    def add_project(self):
+       """Handler for Add Project button"""
+       # Load the dialog UI
+       dialog = uic.loadUi('ui/add_project_dialog.ui')
+       dialog.buttonBox.accepted.connect(dialog.accept)
+       dialog.buttonBox.rejected.connect(dialog.reject)
+       
+       # Show the dialog and wait for user response
+       if dialog.exec() == QDialog.DialogCode.Accepted:
+           # Get the project name from the line edit
+           project_name = dialog.projectNameLineEdit.text().strip()
+           
+           if project_name:
+               # Add to database
+               project_id = self.db.add_project(project_name)
+               print(f"Added project: {project_name} (ID: {project_id})")
 
-    
-    def add_project(self, dialog):
-       """Handler for Add Project button"""      
-       # Get the project name from the line edit
-       project_name = dialog.projectNameLineEdit.text().strip()
-        
-       if project_name:
-           # Add to database
-           project_id = self.db.add_project(project_name)
-           print(f"Added project: {project_name} (ID: {project_id})")
-
-           QMessageBox.information(
+               QMessageBox.information(
                 dialog,                     # parent window (the dialog)
                 "Project Added",             # title of the message box
                 f"The project '{project_name}' has been successfully added!"  # message text
             )
-            
-           # Reload the tree
-           self.load_projects()
-
-           dialog.accept()
+               
+               # Reload the tree
+               self.load_projects()
+           else:
+               QMessageBox.warning(self, "Error", "Project name cannot be empty!")
        else:
-           QMessageBox.warning(self, "Error", "Project name cannot be empty!")
-
-    def reject_project(self, dialog):
-        """Handler for Cancel/Reject button in Add Project dialog"""
-        reply = QMessageBox.question(
+            reply = QMessageBox.question(
             dialog,
             "Cancel",
             "Are you sure you want to cancel adding the project?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
 
-        if reply == QMessageBox.StandardButton.Yes:
-            dialog.reject()  # Closes the dialog without saving anything
+            if reply == QMessageBox.StandardButton.Yes:
+                dialog.reject()  # Closes the dialog without saving anything
+           
 
-    
+   
     def add_task_to_project(self, project_id, project_name):
         """Handler for adding a task to a specific project"""
         # Load the dialog UI
