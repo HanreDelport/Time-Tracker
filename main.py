@@ -1,9 +1,12 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QMessageBox, QDialogButtonBox, QTreeWidgetItem
+from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QMessageBox, QTreeWidgetItem, QPushButton, QHBoxLayout, QWidget
 from PyQt6 import uic
 from database_manager import DatabaseManager
 
 class TimeTrackerApp(QMainWindow):
+
+    #INIT FUNCTION
+
     def __init__(self):
         super().__init__()
         # Load the UI file
@@ -27,6 +30,9 @@ class TimeTrackerApp(QMainWindow):
         self.projectTreeWidget.setColumnWidth(3, 100)  # Status column
         
         print("App initialized successfully!")
+
+
+    #PROJECT FUNCTIONS
 
     def add_project(self):
        """Handler for Add Project button"""
@@ -64,8 +70,9 @@ class TimeTrackerApp(QMainWindow):
 
             if reply == QMessageBox.StandardButton.Yes:
                 dialog.reject()  # Closes the dialog without saving anything
-           
 
+
+    #TASK FUNCTIONS      
    
     def add_task_to_project(self, project_id, project_name):
         """Handler for adding a task to a specific project"""
@@ -105,13 +112,60 @@ class TimeTrackerApp(QMainWindow):
             if reply == QMessageBox.StandardButton.Yes:
                 dialog.reject()  # Closes the dialog without saving anything
 
-                
-    
-    def export_to_csv(self):
-        """Handler for Export to CSV button"""
-        print("Export to CSV clicked!")
-        # We'll implement this later
+    def create_task_buttons(self, task_item, task_id, is_finished, is_running):
+        """Create action buttons for a task"""
+        # Create a widget to hold the buttons
+        button_widget = QWidget()
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(2, 2, 2, 2)
+        button_widget.setLayout(button_layout)
+        
+        if is_finished:
+            # Show only Reopen button for finished tasks
+            reopen_btn = QPushButton("Reopen")
+            reopen_btn.clicked.connect(lambda: self.reopen_task(task_id))
+            button_layout.addWidget(reopen_btn)
+        else:
+            # Show Start/Pause and Finish buttons for active tasks
+            if is_running:
+                pause_btn = QPushButton("Pause")
+                pause_btn.clicked.connect(lambda: self.pause_task(task_id))
+                button_layout.addWidget(pause_btn)
+            else:
+                start_btn = QPushButton("Start")
+                start_btn.clicked.connect(lambda: self.start_task(task_id))
+                button_layout.addWidget(start_btn)
+            
+            finish_btn = QPushButton("Finish")
+            finish_btn.clicked.connect(lambda: self.finish_task(task_id))
+            button_layout.addWidget(finish_btn)
+        
+        return button_widget
 
+    def start_task(self, task_id):
+        """Start a task timer"""
+        print(f"Start task {task_id}")
+        # We'll implement this in the next step
+
+    def pause_task(self, task_id):
+        """Pause a task timer"""
+        print(f"Pause task {task_id}")
+        # We'll implement this in the next step
+
+    def finish_task(self, task_id):
+        """Finish a task"""
+        print(f"Finish task {task_id}")
+        # We'll implement this in the next step
+
+    def reopen_task(self, task_id):
+        """Reopen a finished task"""
+        self.db.reopen_task(task_id)
+        self.load_projects()
+        print(f"Reopened task {task_id}")
+
+
+    #TREE FUNCTIONS            
+    
     def setup_tree_context_menu(self):
         """Setup right-click context menu for the tree"""
         from PyQt6.QtCore import Qt
@@ -195,7 +249,9 @@ class TimeTrackerApp(QMainWindow):
                 time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
                 task_item.setText(1, time_str)  # Column 1: Time
                 
-                # Column 2 will be for action buttons (we'll add these later)
+                # Column 2: Action buttons
+                button_widget = self.create_task_buttons(task_item, task_id, is_finished, is_running)
+                self.projectTreeWidget.setItemWidget(task_item, 2, button_widget)
                 
                 # Column 3: Status
                 if is_finished:
@@ -204,6 +260,13 @@ class TimeTrackerApp(QMainWindow):
                     task_item.setText(3, "Running")
                 else:
                     task_item.setText(3, "Paused")
+
+    #EXPORTING
+
+    def export_to_csv(self):
+        """Handler for Export to CSV button"""
+        print("Export to CSV clicked!")
+        # We'll implement this later
             
 if __name__ == '__main__':
     app = QApplication(sys.argv)
