@@ -1,0 +1,197 @@
+/* =========================
+   GLOBAL
+   ========================= */
+
+* {
+    font-family: "Segoe UI", "Inter", Arial;
+    font-size: 13px;
+}
+
+QMainWindow, QDialog {
+    background-color: #f7f8fa;
+    color: #1f2937;
+}
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+QPushButton {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 6px 14px;
+    color: #111827;
+}
+
+QPushButton:hover {
+    background-color: #f3f4f6;
+}
+
+QPushButton:pressed {
+    background-color: #e5e7eb;
+}
+
+QPushButton:disabled {
+    background-color: #f9fafb;
+    color: #9ca3af;
+    border: 1px solid #e5e7eb;
+}
+
+/* Primary-style buttons (optional) */
+QPushButton#primary {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+}
+
+QPushButton#primary:hover {
+    background-color: #1d4ed8;
+}
+
+/* =========================
+   INPUTS
+   ========================= */
+
+QLineEdit, QSpinBox, QComboBox {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+QLineEdit:focus, QComboBox:focus {
+    border: 1px solid #2563eb;
+}
+
+/* =========================
+   TREE WIDGET (CORE OF YOUR APP)
+   ========================= */
+
+QTreeWidget {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 4px;
+}
+
+QTreeWidget::item {
+    padding: 6px;
+    border-radius: 6px;
+}
+
+QTreeWidget::item:selected {
+    background-color: #e0e7ff;
+    color: #1e3a8a;
+}
+
+QTreeWidget::item:hover {
+    background-color: #f3f4f6;
+}
+
+QTreeWidget::branch {
+    background: transparent;
+}
+
+/* Header */
+QHeaderView::section {
+    background-color: #f9fafb;
+    border: none;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 6px;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* =========================
+   MENUS (RIGHT CLICK + TOOLBAR)
+   ========================= */
+
+QMenu {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+QMenu::item {
+    padding: 6px 16px;
+    border-radius: 6px;
+}
+
+QMenu::item:selected {
+    background-color: #2563eb;
+    color: white;
+}
+
+/* =========================
+   TOOLBAR
+   ========================= */
+
+QToolBar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    spacing: 8px;
+}
+
+QToolButton {
+    background-color: transparent;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+QToolButton:hover {
+    background-color: #f3f4f6;
+}
+
+/* =========================
+   MESSAGE BOXES
+   ========================= */
+
+QMessageBox {
+    background-color: #f9fafb;
+}
+
+QMessageBox QLabel {
+    color: #111827;
+}
+
+/* =========================
+   SCROLLBARS
+   ========================= */
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #d1d5db;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #9ca3af;
+}
+
+QScrollBar::add-line,
+QScrollBar::sub-line {
+    height: 0px;
+}
+
+/* =========================
+   STATUS TEXT VISUAL HINTS
+   ========================= */
+
+/* Optional: color task states via item text */
+QTreeWidget::item[text="Running"] {
+    color: #16a34a;
+}
+
+QTreeWidget::item[text="Paused"] {
+    color: #ca8a04;
+}
+
+QTreeWidget::item[text="Finished"] {
+    color: #6b7280;
+}

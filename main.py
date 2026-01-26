@@ -755,6 +755,8 @@ if __name__ == '__main__':
     "com.hanre.timetracker")
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("assets/stopwatch.ico")) 
+    with open("styles/app.qss", "r") as f:
+        app.setStyleSheet(f.read())
     window = TimeTrackerApp()
     window.show()
     sys.exit(app.exec())
