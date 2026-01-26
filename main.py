@@ -1,10 +1,11 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QMessageBox, QTreeWidgetItem, QPushButton, QHBoxLayout, QWidget
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QDialog, QMessageBox, 
+                             QTreeWidgetItem, QPushButton, QHBoxLayout, QWidget, QSystemTrayIcon, QMenu)
 from PyQt6 import uic
 from database_manager import DatabaseManager
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 from datetime import datetime
-
+from PyQt6.QtGui import QIcon, QAction, QCloseEvent
 
 class TimeTrackerApp(QMainWindow):
 
@@ -32,6 +33,9 @@ class TimeTrackerApp(QMainWindow):
         # Connect toolbar actions to methods
         self.actionAddProject.triggered.connect(self.add_project)
         self.actionExport.triggered.connect(self.export_to_csv)
+
+        # Setup system tray
+        self.setup_system_tray()
         
         # Load projects into the tree
         self.load_projects()
@@ -46,7 +50,7 @@ class TimeTrackerApp(QMainWindow):
         print("App initialized successfully!")
 
 
-    #PROJECT FUNCTIONS
+    # ===== PROJECT METHODS =====
 
     def add_project(self):
        """Handler for Add Project button"""
@@ -85,8 +89,7 @@ class TimeTrackerApp(QMainWindow):
             if reply == QMessageBox.StandardButton.Yes:
                 dialog.reject()  # Closes the dialog without saving anything
 
-
-    #TASK FUNCTIONS      
+    # ===== TASK METHODS =====      
    
     def add_task_to_project(self, project_id, project_name):
         """Handler for adding a task to a specific project"""
@@ -263,8 +266,7 @@ class TimeTrackerApp(QMainWindow):
                     self.running_task_item = task_item
                     return
 
-
-    #TREE FUNCTIONS            
+    # ===== TREE METHODS =====           
     
     def setup_tree_context_menu(self):
         """Setup right-click context menu for the tree"""
@@ -383,8 +385,8 @@ class TimeTrackerApp(QMainWindow):
         time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         project_item.setText(1, time_str)
 
+    # ===== TIMER =====
 
-    #TIMER
     def update_running_task(self):
         """Called every second to update the running task's time display"""
         if self.running_task_id is None or self.running_task_item is None:
@@ -411,8 +413,111 @@ class TimeTrackerApp(QMainWindow):
         if parent_item:
             self.update_project_total_time(parent_item)
 
+    # ===== SYSTEM TRAY =====
 
-    #EXPORTING
+    def setup_system_tray(self):
+        """Setup system tray icon and menu"""
+        # Create system tray icon
+        self.tray_icon = QSystemTrayIcon(self)
+        
+        #Load icon
+        self.tray_icon.setIcon(QIcon("assets/stopwatch.ico"))
+        
+        # Create tray menu
+        tray_menu = QMenu()
+        
+        show_action = QAction("Show", self)
+        show_action.triggered.connect(self.show)
+        tray_menu.addAction(show_action)
+        
+        hide_action = QAction("Hide", self)
+        hide_action.triggered.connect(self.hide)
+        tray_menu.addAction(hide_action)
+        
+        tray_menu.addSeparator()
+        
+        quit_action = QAction("Quit", self)
+        quit_action.triggered.connect(self.quit_application)
+        tray_menu.addAction(quit_action)
+        
+        # Set menu and show tray icon
+        self.tray_icon.setContextMenu(tray_menu)
+        self.tray_icon.show()
+        
+        # Double-click tray icon to show window
+        self.tray_icon.activated.connect(self.tray_icon_activated)
+
+    def tray_icon_activated(self, reason):
+        """Handle tray icon activation (click)"""
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            self.show()
+            self.activateWindow()
+
+    def closeEvent(self, event: QCloseEvent):
+        """Handle window close event"""
+        # Check if a task is running
+        if self.running_task_id is not None:
+            # Show warning
+            reply = QMessageBox.warning(
+                self,
+                "Task Running",
+                "A task is currently running. Are you sure you want to close?\n\n"
+                "The timer will stop and current progress will be saved.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            
+            if reply == QMessageBox.StandardButton.No:
+                event.ignore()  # Cancel the close
+                return
+            else:
+                # Save the running task before closing
+                if self.running_task_id:
+                    current_time = datetime.now()
+                    elapsed_seconds = int((current_time - self.task_start_time).total_seconds())
+                    total_seconds = self.task_elapsed_before_start + elapsed_seconds
+                    self.db.update_task_time(self.running_task_id, total_seconds)
+                    self.db.pause_task(self.running_task_id)
+        
+        # Minimize to tray instead of closing
+        event.ignore()
+        self.hide()
+        self.tray_icon.showMessage(
+            "Time Tracker",
+            "Application minimized to tray. Double-click the tray icon to restore.",
+            QSystemTrayIcon.MessageIcon.Information,
+            2000
+        )
+
+    def quit_application(self):
+        """Properly quit the application"""
+        # Check if a task is running
+        if self.running_task_id is not None:
+            reply = QMessageBox.warning(
+                self,
+                "Task Running",
+                "A task is currently running. Are you sure you want to quit?\n\n"
+                "The timer will stop and current progress will be saved.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            
+            if reply == QMessageBox.StandardButton.No:
+                return
+            else:
+                # Save the running task
+                if self.running_task_id:
+                    current_time = datetime.now()
+                    elapsed_seconds = int((current_time - self.task_start_time).total_seconds())
+                    total_seconds = self.task_elapsed_before_start + elapsed_seconds
+                    self.db.update_task_time(self.running_task_id, total_seconds)
+                    self.db.pause_task(self.running_task_id)
+        
+        # Actually quit
+        QApplication.quit()
+
+
+    # ===== EXPORTING =====
 
     def export_to_csv(self):
         """Handler for Export to CSV button"""
