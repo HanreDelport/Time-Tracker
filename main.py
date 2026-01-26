@@ -5,12 +5,12 @@ from PyQt6 import uic
 from database_manager import DatabaseManager
 from PyQt6.QtCore import QTimer
 from datetime import datetime
-from PyQt6.QtGui import QCloseEvent
+from PyQt6.QtGui import QCloseEvent,QIcon
 import csv
 from openpyxl import Workbook
 from openpyxl.styles import Font
 import os
-
+import ctypes
 
 class TimeTrackerApp(QMainWindow):
 
@@ -18,6 +18,13 @@ class TimeTrackerApp(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        
+        # Set window title
+        self.setWindowTitle("Time Tracker")
+
+        # Set the window icon
+        self.setWindowIcon(QIcon("assets/stopwatch.png")) 
+
         # Load the UI file
         uic.loadUi('ui/main_window.ui', self)
         
@@ -744,7 +751,10 @@ class TimeTrackerApp(QMainWindow):
 
 
 if __name__ == '__main__':
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+    "com.hanre.timetracker")
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon("assets/stopwatch.ico")) 
     window = TimeTrackerApp()
     window.show()
     sys.exit(app.exec())
