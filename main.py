@@ -2,6 +2,8 @@ import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QMessageBox, QTreeWidgetItem, QPushButton, QHBoxLayout, QWidget
 from PyQt6 import uic
 from database_manager import DatabaseManager
+from PyQt6.QtCore import QTimer
+from datetime import datetime
 
 class TimeTrackerApp(QMainWindow):
 
@@ -14,6 +16,17 @@ class TimeTrackerApp(QMainWindow):
         
         # Initialize database manager
         self.db = DatabaseManager()
+
+        # Timer for updating running task
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_running_task)
+        self.timer.start(1000)  # Update every 1 second
+        
+        # Track the currently running task
+        self.running_task_id = None
+        self.running_task_item = None
+        self.task_start_time = None
+        self.task_elapsed_before_start = 0  # Seconds already accumulated
         
         # Connect toolbar actions to methods
         self.actionAddProject.triggered.connect(self.add_project)
@@ -144,24 +157,110 @@ class TimeTrackerApp(QMainWindow):
 
     def start_task(self, task_id):
         """Start a task timer"""
-        print(f"Start task {task_id}")
-        # We'll implement this in the next step
+        # Check if another task is already running
+        running_task = self.db.get_running_task()
+        if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Already Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+        
+        # Get current task's total seconds from database
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT total_seconds FROM tasks WHERE id = ?', (task_id,))
+        result = cursor.fetchone()
+        conn.close()
+        
+        # Start the task
+        self.running_task_id = task_id
+        self.task_start_time = datetime.now()
+        self.task_elapsed_before_start = result[0] if result else 0
+        
+        # Mark task as running in database
+        self.db.start_task(task_id)
+        
+         # Refresh UI
+        self.load_projects()
+        
+        # Find and store reference to the running task item
+        self.find_and_store_running_task_item(task_id)
+        
+        print(f"Started task {task_id}")
 
     def pause_task(self, task_id):
         """Pause a task timer"""
-        print(f"Pause task {task_id}")
-        # We'll implement this in the next step
+        if self.running_task_id != task_id:
+            return
+        
+        # Calculate final time
+        current_time = datetime.now()
+        elapsed_seconds = int((current_time - self.task_start_time).total_seconds())
+        total_seconds = self.task_elapsed_before_start + elapsed_seconds
+        
+        # Update database
+        self.db.update_task_time(task_id, total_seconds)
+        self.db.pause_task(task_id)
+        
+        # Stop tracking
+        self.running_task_id = None
+        self.task_start_time = None
+        self.task_elapsed_before_start = 0
+        self.running_task_item = None
+        
+        # Refresh UI
+        self.load_projects()
+        print(f"Paused task {task_id}")
 
     def finish_task(self, task_id):
         """Finish a task"""
-        print(f"Finish task {task_id}")
-        # We'll implement this in the next step
+        # If task is running, pause it first to save the time
+        if self.running_task_id == task_id:
+            # Calculate final time
+            current_time = datetime.now()
+            elapsed_seconds = int((current_time - self.task_start_time).total_seconds())
+            total_seconds = self.task_elapsed_before_start + elapsed_seconds
+            
+            # Update database with final time
+            self.db.update_task_time(task_id, total_seconds)
+            
+            # Stop tracking
+            self.running_task_id = None
+            self.task_start_time = None
+            self.task_elapsed_before_start = 0
+            self.running_task_item = None
+        
+        # Mark as finished AND not running
+        self.db.finish_task(task_id)
+        #self.db.pause_task(task_id)  # Make sure it's not marked as running
+        
+        # Refresh UI
+        self.load_projects()
+        print(f"Finished task {task_id}")
 
     def reopen_task(self, task_id):
         """Reopen a finished task"""
         self.db.reopen_task(task_id)
+        self.db.pause_task(task_id)  # Make sure it starts as paused, not running
         self.load_projects()
         print(f"Reopened task {task_id}")
+
+    def find_and_store_running_task_item(self, task_id):
+        """Find the tree widget item for the running task"""
+        # Search through all projects
+        for i in range(self.projectTreeWidget.topLevelItemCount()):
+            project_item = self.projectTreeWidget.topLevelItem(i)
+            
+            # Search through all tasks in this project
+            for j in range(project_item.childCount()):
+                task_item = project_item.child(j)
+                
+                # Check if this is our task
+                if task_item.data(0, 1) == task_id:
+                    self.running_task_item = task_item
+                    return
 
 
     #TREE FUNCTIONS            
@@ -260,6 +359,57 @@ class TimeTrackerApp(QMainWindow):
                     task_item.setText(3, "Running")
                 else:
                     task_item.setText(3, "Paused")
+
+    def update_project_total_time(self, project_item):
+        """Update the total time display for a project"""
+        total_seconds = 0
+        
+        # Sum up all child task times
+        for i in range(project_item.childCount()):
+            task_item = project_item.child(i)
+            time_text = task_item.text(1)  # Get time string like "00:05:23"
+            
+            # Parse the time string
+            time_parts = time_text.split(':')
+            if len(time_parts) == 3:
+                hours, minutes, seconds = map(int, time_parts)
+                total_seconds += hours * 3600 + minutes * 60 + seconds
+        
+        # Update project's time display
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        project_item.setText(1, time_str)
+
+
+    #TIMER
+    def update_running_task(self):
+        """Called every second to update the running task's time display"""
+        if self.running_task_id is None or self.running_task_item is None:
+            return
+        
+        # Calculate elapsed time since start
+        current_time = datetime.now()
+        elapsed_seconds = int((current_time - self.task_start_time).total_seconds())
+        
+        # Total time = previous time + current session time
+        total_seconds = self.task_elapsed_before_start + elapsed_seconds
+        
+        # Update only the display (no database write yet)
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        
+        # Update only the time column in the UI
+        self.running_task_item.setText(1, time_str)
+        
+        # Also update the parent project's total time
+        parent_item = self.running_task_item.parent()
+        if parent_item:
+            self.update_project_total_time(parent_item)
+
 
     #EXPORTING
 

@@ -1,18 +1,16 @@
 import sqlite3
 
-def update_database():
+def fix_stuck_tasks():
     conn = sqlite3.connect('database/timetracker.db')
     cursor = conn.cursor()
     
-    # Add a column to track if a task is currently running
-    cursor.execute('''
-        ALTER TABLE tasks ADD COLUMN is_running INTEGER DEFAULT 0
-    ''')
+    # Set all tasks to not running
+    cursor.execute('UPDATE tasks SET is_running = 0')
     
     conn.commit()
     conn.close()
     
-    print("Database updated! Added 'is_running' column to tasks table.")
+    print("Fixed all stuck running tasks!")
 
 if __name__ == '__main__':
-    update_database()
+    fix_stuck_tasks()
