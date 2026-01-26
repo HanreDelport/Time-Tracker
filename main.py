@@ -505,12 +505,28 @@ class TimeTrackerApp(QMainWindow):
                             task_item.setBackground(col, QBrush(QColor("#23cff6")))  # pale blue
                             task_item.setForeground(col, QBrush(QColor("#1e3a8a")))  # dark blue text
 
+                            for col in range(self.projectTreeWidget.columnCount()):
+                                font = task_item.font(col)
+                                font.setBold(True)
+                                task_item.setFont(col, font)
+
                 # Highlight parent project
                 if projectOpen:
                     for col in range(self.projectTreeWidget.columnCount()):
-                        project_item.setBackground(col, QBrush(QColor("#23cff6")))  # lighter pale blue
+                        project_item.setBackground(col, QBrush(QColor("#23cff6"))) 
                         project_item.setForeground(col, QBrush(QColor("#1d4ed8")))
+
+                        for col in range(self.projectTreeWidget.columnCount()):
+                                font = project_item.font(col)
+                                font.setBold(True)
+                                project_item.setFont(col, font)
         
+        #Stretch Collumns out with window
+        header = self.projectTreeWidget.header()
+        for col in range(self.projectTreeWidget.columnCount()):
+            header.setSectionResizeMode(col, header.ResizeMode.Stretch)
+
+
         self.restore_tree_state(tree_state)
 
 
