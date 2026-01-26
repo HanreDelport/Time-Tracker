@@ -5,6 +5,7 @@ from database_manager import DatabaseManager
 from PyQt6.QtCore import QTimer
 from datetime import datetime
 
+
 class TimeTrackerApp(QMainWindow):
 
     #INIT FUNCTION
