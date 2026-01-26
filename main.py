@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QDialog, QMessageBox, 
-                             QTreeWidgetItem, QPushButton, QHBoxLayout, QWidget)
+                             QTreeWidgetItem, QPushButton, QHBoxLayout, QWidget, QInputDialog, QMenu)
 from PyQt6 import uic
 from database_manager import DatabaseManager
 from PyQt6.QtCore import QTimer
@@ -46,7 +46,6 @@ class TimeTrackerApp(QMainWindow):
         
         print("App initialized successfully!")
 
-
     # ===== PROJECT METHODS =====
 
     def add_project(self):
@@ -85,6 +84,37 @@ class TimeTrackerApp(QMainWindow):
 
             if reply == QMessageBox.StandardButton.Yes:
                 dialog.reject()  # Closes the dialog without saving anything
+
+    def rename_project(self, project_id, old_name):
+        """Rename a project"""
+        new_name, ok = QInputDialog.getText(
+            self,
+            "Rename Project",
+            "Enter new project name:",
+            text=old_name
+        )
+        
+        if ok and new_name.strip():
+            self.db.rename_project(project_id, new_name.strip())
+            self.load_projects()
+            print(f"Renamed project {project_id} to '{new_name}'")
+
+    def delete_project(self, project_id, project_name):
+        """Delete a project"""
+        reply = QMessageBox.question(
+            self,
+            "Delete Project",
+            f"Are you sure you want to delete the project '{project_name}'?\n\n"
+            "This will also delete all tasks in this project.\n"
+            "This action cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.db.delete_project(project_id)
+            self.load_projects()
+            print(f"Deleted project {project_id}")
 
     # ===== TASK METHODS =====      
    
@@ -263,6 +293,45 @@ class TimeTrackerApp(QMainWindow):
                     self.running_task_item = task_item
                     return
 
+    def rename_task(self, task_id, old_name):
+        """Rename a task"""
+        new_name, ok = QInputDialog.getText(
+            self,
+            "Rename Task",
+            "Enter new task name:",
+            text=old_name
+        )
+        
+        if ok and new_name.strip():
+            self.db.rename_task(task_id, new_name.strip())
+            self.load_projects()
+            print(f"Renamed task {task_id} to '{new_name}'")
+
+    def delete_task(self, task_id, task_name):
+        """Delete a task"""
+        # Check if this task is currently running
+        if self.running_task_id == task_id:
+            QMessageBox.warning(
+                self,
+                "Cannot Delete",
+                "Cannot delete a running task. Please pause or finish it first."
+            )
+            return
+        
+        reply = QMessageBox.question(
+            self,
+            "Delete Task",
+            f"Are you sure you want to delete the task '{task_name}'?\n\n"
+            "This action cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.db.delete_task(task_id)
+            self.load_projects()
+            print(f"Deleted task {task_id}")
+
     # ===== TREE METHODS =====           
     
     def setup_tree_context_menu(self):
@@ -273,25 +342,45 @@ class TimeTrackerApp(QMainWindow):
 
     def show_context_menu(self, position):
         """Show context menu when right-clicking on tree items"""
-        from PyQt6.QtWidgets import QMenu
-        
         item = self.projectTreeWidget.itemAt(position)
         if item is None:
             return
         
+        menu = QMenu()
+        
         # Check if this is a project item (parent is None) or task item (has parent)
         if item.parent() is None:
-            # This is a project item
+            # This is a PROJECT item
             project_id = item.data(0, 1)
             project_name = item.text(0)
             
-            menu = QMenu()
             add_task_action = menu.addAction("Add Task")
+            rename_project_action = menu.addAction("Rename Project")
+            delete_project_action = menu.addAction("Delete Project")
             
             action = menu.exec(self.projectTreeWidget.viewport().mapToGlobal(position))
             
             if action == add_task_action:
                 self.add_task_to_project(project_id, project_name)
+            elif action == rename_project_action:
+                self.rename_project(project_id, project_name)
+            elif action == delete_project_action:
+                self.delete_project(project_id, project_name)
+        
+        else:
+            # This is a TASK item
+            task_id = item.data(0, 1)
+            task_name = item.text(0)
+            
+            rename_task_action = menu.addAction("Rename Task")
+            delete_task_action = menu.addAction("Delete Task")
+            
+            action = menu.exec(self.projectTreeWidget.viewport().mapToGlobal(position))
+            
+            if action == rename_task_action:
+                self.rename_task(task_id, task_name)
+            elif action == delete_task_action:
+                self.delete_task(task_id, task_name)
         
     def load_projects(self):
         """Load all projects from database into the tree widget"""
