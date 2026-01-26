@@ -50,21 +50,23 @@
      <height>26</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuAdd">
+    <property name="title">
+     <string>Add</string>
+    </property>
+    <addaction name="actionAddProject"/>
+   </widget>
+   <widget class="QMenu" name="menuExport">
+    <property name="title">
+     <string>Export</string>
+    </property>
+    <addaction name="actionExportCSV"/>
+    <addaction name="actionActionExportExcel"/>
+   </widget>
+   <addaction name="menuAdd"/>
+   <addaction name="menuExport"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionAddProject"/>
-   <addaction name="actionExport"/>
-  </widget>
   <action name="actionAddProject">
    <property name="text">
     <string>Add Project</string>
@@ -73,9 +75,17 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="actionExport">
+  <action name="actionExportCSV">
    <property name="text">
-    <string>Export to CSV</string>
+    <string>Export to .csv</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionActionExportExcel">
+   <property name="text">
+    <string>Export to .xlsx</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>

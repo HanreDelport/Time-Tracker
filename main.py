@@ -7,6 +7,10 @@ from PyQt6.QtCore import QTimer
 from datetime import datetime
 from PyQt6.QtGui import QCloseEvent
 import csv
+from openpyxl import Workbook
+from openpyxl.styles import Font
+import os
+
 
 class TimeTrackerApp(QMainWindow):
 
@@ -33,7 +37,8 @@ class TimeTrackerApp(QMainWindow):
         
         # Connect toolbar actions to methods
         self.actionAddProject.triggered.connect(self.add_project)
-        self.actionExport.triggered.connect(self.export_to_csv)
+        self.actionExportCSV.triggered.connect(self.export_to_csv)
+        self.actionActionExportExcel.triggered.connect(self.export_to_excel)
         
         # Load projects into the tree
         self.load_projects()
@@ -501,6 +506,7 @@ class TimeTrackerApp(QMainWindow):
             self.update_project_total_time(parent_item)
 
     # ===== HANDLE CLOSING =====
+
     def closeEvent(self, event: QCloseEvent):
         """Handle window close event"""
         # Check if a task is running
@@ -532,96 +538,211 @@ class TimeTrackerApp(QMainWindow):
     # ===== EXPORTING =====
 
     def export_to_csv(self):
-        """Export all projects and tasks to CSV"""
-        # Ask user where to save the file
+        """Export all projects and tasks to CSV (.csv)"""
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Export to CSV",
             "exports/time_tracker_export.csv",
             "CSV Files (*.csv)"
         )
-        
+
         if not file_path:
-            return  # User cancelled
-        
+            return
+
         try:
-            with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-                writer = csv.writer(csvfile)
-                
-                # Write header
-                writer.writerow(['Project', 'Task', 'Time (HH:MM:SS)', 'Status'])
-                
-                # Get all projects
+            with open(file_path, mode='w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+
+                # Header
+                headers = ['Project', 'Task', 'Time (HH:MM:SS)', 'Status']
+                writer.writerow(headers)
+
                 projects = self.db.get_all_projects()
-                
-                for project in projects:
-                    project_id, project_name = project
-                    
-                    # Get tasks for this project
+
+                for project_id, project_name in projects:
                     tasks = self.db.get_tasks_for_project(project_id)
-                    
+
                     if not tasks:
-                        # Project with no tasks
-                        writer.writerow([project_name, '', '00:00:00', 'No tasks'])
+                        project_time = "00:00:00"
+                        project_status = "N/A"
+                        writer.writerow([project_name, '', project_time, 'No tasks'])
                     else:
-                        # Calculate project total
+                        # Calculate total project time
                         total_seconds = sum(task[2] for task in tasks)
-                        hours = total_seconds // 3600
-                        minutes = (total_seconds % 3600) // 60
-                        seconds = total_seconds % 60
-                        project_time = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-                        
-                        # Write project summary row
-                        writer.writerow([
-                            f"{project_name} (Total)", 
-                            '', 
-                            project_time, 
-                            f"{len(tasks)} task(s)"
-                        ])
-                        
-                        # Write each task
-                        for task in tasks:
+                        h = total_seconds // 3600
+                        m = (total_seconds % 3600) // 60
+                        s = total_seconds % 60
+                        project_time = f"{h:02d}:{m:02d}:{s:02d}"
+
+                        # Determine project status
+                        project_status = "Finished" if all(task[3] for task in tasks) else "Open"
+
+                        # First task in the same row as project
+                        task_id, task_name, task_seconds, is_finished, is_running = tasks[0]
+                        h = task_seconds // 3600
+                        m = (task_seconds % 3600) // 60
+                        s = task_seconds % 60
+                        time_str = f"{h:02d}:{m:02d}:{s:02d}"
+
+                        if is_finished:
+                            status = "Finished"
+                        elif is_running:
+                            status = "Running"
+                        else:
+                            status = "Paused"
+
+                        writer.writerow([project_name, task_name, time_str, status])
+
+                        # Remaining tasks
+                        for task in tasks[1:]:
                             task_id, task_name, task_seconds, is_finished, is_running = task
-                            
-                            # Format time
-                            hours = task_seconds // 3600
-                            minutes = (task_seconds % 3600) // 60
-                            seconds = task_seconds % 60
-                            time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-                            
-                            # Determine status
+                            h = task_seconds // 3600
+                            m = (task_seconds % 3600) // 60
+                            s = task_seconds % 60
+                            time_str = f"{h:02d}:{m:02d}:{s:02d}"
+
                             if is_finished:
                                 status = "Finished"
                             elif is_running:
                                 status = "Running"
                             else:
                                 status = "Paused"
-                            
-                            writer.writerow([
-                                '',  # Empty project column for tasks
+
+                            writer.writerow(['', task_name, time_str, status])
+
+                    # Project Total row
+                    writer.writerow([
+                        "Total:",
+                        '',
+                        project_time,
+                        f"{len(tasks)} task(s), Status: {project_status}"
+                    ])
+
+            # Automatically open the CSV file after saving (Windows)
+            import os
+            os.startfile(file_path)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to export CSV:\n{e}")
+
+    def export_to_excel(self):
+        """Export all projects and tasks to Excel (.xlsx)"""
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export to Excel",
+            "exports/time_tracker_export.xlsx",
+            "Excel Files (*.xlsx)"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Time Tracker"
+
+            # Header
+            headers = ['Project', 'Task', 'Time (HH:MM:SS)', 'Status']
+            ws.append(headers)
+
+            # Bold header
+            for cell in ws[ws.max_row]:
+                cell.font = Font(bold=True)
+
+            projects = self.db.get_all_projects()
+
+            for project_id, project_name in projects:
+                tasks = self.db.get_tasks_for_project(project_id)
+
+                if not tasks:
+                    ws.append([project_name, 'N/A', '00:00:00', 'No tasks'])
+                    ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
+                else:
+                    total_seconds = sum(task[2] for task in tasks)
+                    h = total_seconds // 3600
+                    m = (total_seconds % 3600) // 60
+                    s = total_seconds % 60
+                    project_time = f"{h:02d}:{m:02d}:{s:02d}"
+
+                    projectFirstLine = True
+
+                    for task_id, task_name, task_seconds, is_finished, is_running in tasks:
+                        h = task_seconds // 3600
+                        m = (task_seconds % 3600) // 60
+                        s = task_seconds % 60
+                        time_str = f"{h:02d}:{m:02d}:{s:02d}"
+
+                        # Determine project status
+                        if all(task[3] for task in tasks):  
+                            project_status = "Finished"
+                        else:
+                            project_status = "In Progress"  
+
+                        if is_finished:
+                            status = "Finished"
+                        elif is_running:
+                            status = "Running"
+                        else:
+                            status = "Paused"
+
+                        #Include project name in the first line of the project
+                        if (projectFirstLine):
+                            ws.append([
+                                f"{project_name}",
                                 task_name,
                                 time_str,
                                 status
                             ])
+                            ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
+                            projectFirstLine = False
+                        else:
+                            ws.append([
+                                "",
+                                task_name,
+                                time_str,
+                                status
+                            ])
+
+
+                    # Project summary row
+                    ws.append([
+                        '',
+                        f"{len(tasks)} task(s)",
+                        project_time,
+                        project_status
+                    ])
+
+                    for cell in ws[ws.max_row]:
+                        cell.font = Font(bold=True)
                     
-                    # Empty row between projects
-                    writer.writerow([])
-            
+                # Empty row between projects
+                ws.append([])
+
+            # Auto-size columns
+            for column in ws.columns:
+                max_length = max(len(str(cell.value)) if cell.value else 0 for cell in column)
+                ws.column_dimensions[column[0].column_letter].width = max_length + 2
+
+            wb.save(file_path)
+
             QMessageBox.information(
                 self,
                 "Export Successful",
                 f"Data exported successfully to:\n{file_path}"
             )
-            print(f"Exported to {file_path}")
-            
+
+            # Open the Excel file
+            os.startfile(file_path)
+
         except Exception as e:
             QMessageBox.critical(
                 self,
                 "Export Failed",
                 f"Failed to export data:\n{str(e)}"
             )
-            print(f"Export error: {e}")
-            
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = TimeTrackerApp()
