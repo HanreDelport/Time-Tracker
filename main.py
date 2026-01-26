@@ -1,11 +1,12 @@
 import sys
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QDialog, QMessageBox, 
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QDialog, QMessageBox, QFileDialog,
                              QTreeWidgetItem, QPushButton, QHBoxLayout, QWidget, QInputDialog, QMenu)
 from PyQt6 import uic
 from database_manager import DatabaseManager
 from PyQt6.QtCore import QTimer
 from datetime import datetime
 from PyQt6.QtGui import QCloseEvent
+import csv
 
 class TimeTrackerApp(QMainWindow):
 
@@ -531,9 +532,95 @@ class TimeTrackerApp(QMainWindow):
     # ===== EXPORTING =====
 
     def export_to_csv(self):
-        """Handler for Export to CSV button"""
-        print("Export to CSV clicked!")
-        # We'll implement this later
+        """Export all projects and tasks to CSV"""
+        # Ask user where to save the file
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export to CSV",
+            "exports/time_tracker_export.csv",
+            "CSV Files (*.csv)"
+        )
+        
+        if not file_path:
+            return  # User cancelled
+        
+        try:
+            with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                
+                # Write header
+                writer.writerow(['Project', 'Task', 'Time (HH:MM:SS)', 'Status'])
+                
+                # Get all projects
+                projects = self.db.get_all_projects()
+                
+                for project in projects:
+                    project_id, project_name = project
+                    
+                    # Get tasks for this project
+                    tasks = self.db.get_tasks_for_project(project_id)
+                    
+                    if not tasks:
+                        # Project with no tasks
+                        writer.writerow([project_name, '', '00:00:00', 'No tasks'])
+                    else:
+                        # Calculate project total
+                        total_seconds = sum(task[2] for task in tasks)
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        seconds = total_seconds % 60
+                        project_time = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                        
+                        # Write project summary row
+                        writer.writerow([
+                            f"{project_name} (Total)", 
+                            '', 
+                            project_time, 
+                            f"{len(tasks)} task(s)"
+                        ])
+                        
+                        # Write each task
+                        for task in tasks:
+                            task_id, task_name, task_seconds, is_finished, is_running = task
+                            
+                            # Format time
+                            hours = task_seconds // 3600
+                            minutes = (task_seconds % 3600) // 60
+                            seconds = task_seconds % 60
+                            time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                            
+                            # Determine status
+                            if is_finished:
+                                status = "Finished"
+                            elif is_running:
+                                status = "Running"
+                            else:
+                                status = "Paused"
+                            
+                            writer.writerow([
+                                '',  # Empty project column for tasks
+                                task_name,
+                                time_str,
+                                status
+                            ])
+                    
+                    # Empty row between projects
+                    writer.writerow([])
+            
+            QMessageBox.information(
+                self,
+                "Export Successful",
+                f"Data exported successfully to:\n{file_path}"
+            )
+            print(f"Exported to {file_path}")
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Export Failed",
+                f"Failed to export data:\n{str(e)}"
+            )
+            print(f"Export error: {e}")
             
 if __name__ == '__main__':
     app = QApplication(sys.argv)
