@@ -3,9 +3,15 @@
    ========================= */
 
 * {
-    font-family: "Segoe UI", "Inter", Arial;
-    font-size: 13px;
+    font-family:        
+        "Segoe UI",
+        "Segoe UI Variable",
+        "Inter",
+        "Roboto",
+        "Arial";
+    font-size: 15px;
 }
+
 
 QMainWindow, QDialog {
     background-color: #f7f8fa;
@@ -20,9 +26,12 @@ QPushButton {
     background-color: #ffffff;
     border: 1px solid #d1d5db;
     border-radius: 8px;
-    padding: 6px 14px;
     color: #111827;
+    min-height: 22px;
+    padding: 6px 16px;
+    border-radius: 10px;
 }
+
 
 QPushButton:hover {
     background-color: #f3f4f6;
@@ -56,13 +65,15 @@ QPushButton#primary:hover {
 QLineEdit, QSpinBox, QComboBox {
     background-color: #ffffff;
     border: 1px solid #d1d5db;
-    border-radius: 8px;
-    padding: 6px 10px;
+    min-height: 34px;
+    padding: 6px 12px;
+    border-radius: 10px;
 }
 
 QLineEdit:focus, QComboBox:focus {
     border: 1px solid #2563eb;
 }
+
 
 /* =========================
    TREE WIDGET (CORE OF YOUR APP)
@@ -71,13 +82,14 @@ QLineEdit:focus, QComboBox:focus {
 QTreeWidget {
     background-color: #ffffff;
     border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 4px;
+    border-radius: 12px;
+    padding: 6px;
 }
 
 QTreeWidget::item {
-    padding: 6px;
-    border-radius: 6px;
+    min-height: 38px;
+    padding: 8px 6px;
+    border-radius: 8px;
 }
 
 QTreeWidget::item:selected {
@@ -89,18 +101,44 @@ QTreeWidget::item:hover {
     background-color: #f3f4f6;
 }
 
-QTreeWidget::branch {
+
+/* =========================
+   TREE EXPAND / COLLAPSE ARROWS
+   ========================= */
+
+QTreeView::branch {
     background: transparent;
 }
 
+/* Collapsed arrow */
+QTreeView::branch:closed:has-children {
+    image: url(assets/arrowRight.svg);
+    width: 18px;
+    height: 18px;
+}
+
+/* Expanded arrow */
+QTreeView::branch:open:has-children {
+    image: url(assets/arrowDown.svg);
+    width: 18px;
+    height: 18px;
+}
+
+/* Hover feedback */
+QTreeView::branch:hover {
+    background-color: #f3f4f6;
+    border-radius: 6px;
+}
+
+
 /* Header */
 QHeaderView::section {
-    background-color: #f9fafb;
-    border: none;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 6px;
+    min-height: 38px;
+    padding: 8px;
+    font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 /* =========================
@@ -114,34 +152,44 @@ QMenu {
     padding: 6px;
 }
 
+QMenuBar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 6px 8px;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 6px 14px;
+    margin: 0 4px;
+    border-radius: 8px;
+    color: #111827;
+}
+
+QMenuBar::item:selected {
+    background-color: #f3f4f6;
+}
+
+QMenuBar::item:pressed {
+    background-color: #e5e7eb;
+}
+
+/* Dropdown menu (File, Export, etc.) */
+QMenu {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 6px;
+}
+
 QMenu::item {
-    padding: 6px 16px;
-    border-radius: 6px;
+    padding: 8px 18px;
+    border-radius: 8px;
 }
 
 QMenu::item:selected {
     background-color: #2563eb;
     color: white;
-}
-
-/* =========================
-   TOOLBAR
-   ========================= */
-
-QToolBar {
-    background-color: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
-    spacing: 8px;
-}
-
-QToolButton {
-    background-color: transparent;
-    border-radius: 6px;
-    padding: 6px;
-}
-
-QToolButton:hover {
-    background-color: #f3f4f6;
 }
 
 /* =========================
@@ -162,12 +210,13 @@ QMessageBox QLabel {
 
 QScrollBar:vertical {
     background: transparent;
-    width: 10px;
+    width: 12px;
 }
 
 QScrollBar::handle:vertical {
     background-color: #d1d5db;
-    border-radius: 5px;
+    min-height: 30px;
+    border-radius: 6px;
 }
 
 QScrollBar::handle:vertical:hover {
@@ -178,6 +227,7 @@ QScrollBar::add-line,
 QScrollBar::sub-line {
     height: 0px;
 }
+
 
 /* =========================
    STATUS TEXT VISUAL HINTS

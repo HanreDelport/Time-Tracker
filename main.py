@@ -3,9 +3,9 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QDialog, QMessageBox, QF
                              QTreeWidgetItem, QPushButton, QHBoxLayout, QWidget, QInputDialog, QMenu)
 from PyQt6 import uic
 from database_manager import DatabaseManager
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 from datetime import datetime
-from PyQt6.QtGui import QCloseEvent,QIcon
+from PyQt6.QtGui import QCloseEvent, QIcon, QBrush, QColor
 import csv
 from openpyxl import Workbook
 from openpyxl.styles import Font
@@ -27,6 +27,8 @@ class TimeTrackerApp(QMainWindow):
 
         # Load the UI file
         uic.loadUi('ui/main_window.ui', self)
+        self.projectTreeWidget.setUniformRowHeights(True)
+        self.projectTreeWidget.setIndentation(18)
         
         # Initialize database manager
         self.db = DatabaseManager()
@@ -179,21 +181,25 @@ class TimeTrackerApp(QMainWindow):
         
         if is_finished:
             # Show only Reopen button for finished tasks
-            reopen_btn = QPushButton("Reopen")
+            reopen_btn = QPushButton("Reopen")            
+            reopen_btn.setObjectName("primary")
             reopen_btn.clicked.connect(lambda: self.reopen_task(task_id))
             button_layout.addWidget(reopen_btn)
         else:
             # Show Start/Pause and Finish buttons for active tasks
             if is_running:
-                pause_btn = QPushButton("Pause")
+                pause_btn = QPushButton("Pause")           
+                pause_btn.setObjectName("primary")
                 pause_btn.clicked.connect(lambda: self.pause_task(task_id))
                 button_layout.addWidget(pause_btn)
             else:
-                start_btn = QPushButton("Start")
+                start_btn = QPushButton("Start")                
+                start_btn.setObjectName("primary")
                 start_btn.clicked.connect(lambda: self.start_task(task_id))
                 button_layout.addWidget(start_btn)
             
-            finish_btn = QPushButton("Finish")
+            finish_btn = QPushButton("Finish")           
+            finish_btn.setObjectName("primary")
             finish_btn.clicked.connect(lambda: self.finish_task(task_id))
             button_layout.addWidget(finish_btn)
         
@@ -394,10 +400,30 @@ class TimeTrackerApp(QMainWindow):
                 self.rename_task(task_id, task_name)
             elif action == delete_task_action:
                 self.delete_task(task_id, task_name)
+
+    def get_tree_state(self):
+        state = {}
+        for i in range(self.projectTreeWidget.topLevelItemCount()):
+            item = self.projectTreeWidget.topLevelItem(i)
+            project_id = item.data(0, 1)
+            state[project_id] = item.isExpanded()
+        return state
+    
+    def restore_tree_state(self, state):
+        for i in range(self.projectTreeWidget.topLevelItemCount()):
+            item = self.projectTreeWidget.topLevelItem(i)
+            project_id = item.data(0, 1)
+            if project_id in state:
+                item.setExpanded(state[project_id])
+
+
         
     def load_projects(self):
         """Load all projects from database into the tree widget"""
-        # Clear the tree first
+        #Get current state of tree
+        tree_state = self.get_tree_state()
+
+        # Clear the tree
         self.projectTreeWidget.clear()
         
         # Get all projects from database
@@ -461,6 +487,32 @@ class TimeTrackerApp(QMainWindow):
                     task_item.setText(3, "Running")
                 else:
                     task_item.setText(3, "Paused")
+
+        # Highlight running task
+        if self.running_task_id is not None:
+            for i in range(self.projectTreeWidget.topLevelItemCount()):
+                projectOpen = False
+                project_item = self.projectTreeWidget.topLevelItem(i)
+                for j in range(project_item.childCount()):
+                    task_item = project_item.child(j)
+                    task_id = task_item.data(0, 1)
+                    
+                    if task_id == self.running_task_id:
+                        projectOpen = True
+
+                        # Set a light blue background
+                        for col in range(self.projectTreeWidget.columnCount()):
+                            task_item.setBackground(col, QBrush(QColor("#23cff6")))  # pale blue
+                            task_item.setForeground(col, QBrush(QColor("#1e3a8a")))  # dark blue text
+
+                # Highlight parent project
+                if projectOpen:
+                    for col in range(self.projectTreeWidget.columnCount()):
+                        project_item.setBackground(col, QBrush(QColor("#23cff6")))  # lighter pale blue
+                        project_item.setForeground(col, QBrush(QColor("#1d4ed8")))
+        
+        self.restore_tree_state(tree_state)
+
 
     def update_project_total_time(self, project_item):
         """Update the total time display for a project"""

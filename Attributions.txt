@@ -2,3 +2,13 @@ Timer icon
 Author: Freepik
 Source: https://www.flaticon.com/free-icons/timer
 License: Flaticon Free License
+
+Right Arrow icon 
+Author: Freepik, Arkinasi
+Source: https://www.flaticon.com/free-icons/next
+License: Flaticon Free License
+
+Right Arrow icon 
+Author: Freepik, Arkinasi
+Source: https://www.flaticon.com/free-icons/double-arrow
+License: Flaticon Free License
