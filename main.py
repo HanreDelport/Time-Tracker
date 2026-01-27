@@ -12,6 +12,24 @@ from openpyxl.styles import Font
 import os
 import ctypes
 
+
+import traceback
+import logging
+
+# Setup logging to file
+logging.basicConfig(
+    filename='time_tracker_debug.log',
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Also log uncaught exceptions
+def exception_hook(exctype, value, tb):
+    logging.error('Uncaught exception:', exc_info=(exctype, value, tb))
+    sys.__excepthook__(exctype, value, tb)
+
+sys.excepthook = exception_hook
+
 # ===== GET RESOURCE PATH =====
 
 def resource_path(relative_path):
@@ -81,51 +99,68 @@ class TimeTrackerApp(QMainWindow):
     # ===== PROJECT METHODS =====
 
     def add_project(self):
-       """Handler for Add Project button"""
-       running_task = self.db.get_running_task()
-       if running_task:
-            QMessageBox.warning(
-                self, 
-                "Task Running", 
-                f"Please pause or finish the currently running task first:\n{running_task[2]}"
-            )
-            return
+        """Handler for Add Project button"""
+        try:
+            logging.info("add_project called")
+            
+            running_task = self.db.get_running_task()
+            if running_task:
+                QMessageBox.warning(
+                    self, 
+                    "Task Running", 
+                    f"Please pause or finish the currently running task first:\n{running_task[2]}"
+                )
+                return
 
-       # Load the dialog UI
-       dialog = QDialog(self)
-       uic.loadUi(resource_path('ui/add_project_dialog.ui'), dialog)
-       dialog.buttonBox.accepted.connect(dialog.accept)
-       dialog.buttonBox.rejected.connect(dialog.reject)
-       
-       # Show the dialog and wait for user response
-       if dialog.exec() == QDialog.DialogCode.Accepted:
-           # Get the project name from the line edit
-           project_name = dialog.projectNameLineEdit.text().strip()
-           
-           if project_name:
-               # Add to database
-               project_id = self.db.add_project(project_name)
-               print(f"Added project: {project_name} (ID: {project_id})")
+            logging.info("About to load dialog UI")
+            
+            # Load the dialog UI
+            dialog = QDialog(self)
+            uic.loadUi(resource_path('ui/add_project_dialog.ui'), dialog)
+            
+            logging.info("Dialog UI loaded successfully")
+            
+            dialog.buttonBox.accepted.connect(dialog.accept)
+            dialog.buttonBox.rejected.connect(dialog.reject)
+            
+            logging.info("About to show dialog")
+            
+            # Show the dialog and wait for user response
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                # Get the project name from the line edit
+                project_name = dialog.projectNameLineEdit.text().strip()
+                
+                logging.info(f"Dialog accepted with name: {project_name}")
+                
+                if project_name:
+                    # Add to database
+                    project_id = self.db.add_project(project_name)
+                    print(f"Added project: {project_name} (ID: {project_id})")
 
-               QMessageBox.information(
-                dialog,                     # parent window (the dialog)
-                "Project Added",             # title of the message box
-                f"The project '{project_name}' has been successfully added!"  # message text
-            )
-               
-               # Reload the tree
-               self.load_projects()
-           else:
-               QMessageBox.warning(self, "Error", "Project name cannot be empty!")
-       else:
-            reply = QMessageBox.question(
-            dialog,
-            "Cancel",
-            "Are you sure you want to cancel adding the project?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                    QMessageBox.information(
+                        dialog,
+                        "Project Added",
+                        f"The project '{project_name}' has been successfully added!"
+                    )
+                    
+                    # Reload the tree
+                    self.load_projects()
+                else:
+                    QMessageBox.warning(self, "Error", "Project name cannot be empty!")
+            else:
+                reply = QMessageBox.question(
+                    dialog,
+                    "Cancel",
+                    "Are you sure you want to cancel adding the project?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
 
-            if reply == QMessageBox.StandardButton.Yes:
-                dialog.reject()  # Closes the dialog without saving anything
+                if reply == QMessageBox.StandardButton.Yes:
+                    dialog.reject()
+                    
+        except Exception as e:
+            logging.error(f"Error in add_project: {str(e)}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+
 
     def rename_project(self, project_id, old_name):
          # Check if another task is already running
