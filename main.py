@@ -938,8 +938,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(resource_path("assets/stopwatch.ico")))
     with open(resource_path("styles/app.qss"), "r") as f:
-        app.setStyleSheet(f.read())
-
+        stylesheet = f.read()
+        
         # Replace relative paths with absolute paths for PyInstaller
         stylesheet = stylesheet.replace(
             "url(assets/arrowRight.svg)", 
