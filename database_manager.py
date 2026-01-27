@@ -1,8 +1,10 @@
 import sqlite3
+from database_setup import create_database
 
 class DatabaseManager:
     def __init__(self, db_path='database/timetracker.db'):
         self.db_path = db_path
+        create_database()
     
     def get_connection(self):
         """Create and return a database connection"""

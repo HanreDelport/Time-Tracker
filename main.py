@@ -29,15 +29,11 @@ class TimeTrackerApp(QMainWindow):
         uic.loadUi('ui/main_window.ui', self)
         
          # Set window icon
-        from PyQt6.QtGui import QIcon
-        import os
         if os.path.exists('icon.ico'):
             self.setWindowIcon(QIcon('icon.ico'))
 
         self.projectTreeWidget.setUniformRowHeights(True)
         self.projectTreeWidget.setIndentation(18)
-
-
         
         # Initialize database manager
         self.db = DatabaseManager()
@@ -918,8 +914,6 @@ class TimeTrackerApp(QMainWindow):
 
 
 if __name__ == '__main__':
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-    "com.hanre.timetracker")
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("assets/stopwatch.ico")) 
     with open("styles/app.qss", "r") as f:
