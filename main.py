@@ -65,6 +65,15 @@ class TimeTrackerApp(QMainWindow):
 
     def add_project(self):
        """Handler for Add Project button"""
+       running_task = self.db.get_running_task()
+       if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+
        # Load the dialog UI
        dialog = uic.loadUi('ui/add_project_dialog.ui')
        dialog.buttonBox.accepted.connect(dialog.accept)
@@ -101,6 +110,16 @@ class TimeTrackerApp(QMainWindow):
                 dialog.reject()  # Closes the dialog without saving anything
 
     def rename_project(self, project_id, old_name):
+         # Check if another task is already running
+        running_task = self.db.get_running_task()
+        if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Already Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+
         """Rename a project"""
         new_name, ok = QInputDialog.getText(
             self,
@@ -116,6 +135,16 @@ class TimeTrackerApp(QMainWindow):
 
     def delete_project(self, project_id, project_name):
         """Delete a project"""
+        # Check if another task is already running
+        running_task = self.db.get_running_task()
+        if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+        
         reply = QMessageBox.question(
             self,
             "Delete Project",
@@ -135,6 +164,16 @@ class TimeTrackerApp(QMainWindow):
    
     def add_task_to_project(self, project_id, project_name):
         """Handler for adding a task to a specific project"""
+        # Check if another task is already running
+        running_task = self.db.get_running_task()
+        if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+        
         # Load the dialog UI
         dialog = uic.loadUi('ui/add_task_dialog.ui')
         dialog.buttonBox.accepted.connect(dialog.accept)
@@ -173,6 +212,7 @@ class TimeTrackerApp(QMainWindow):
 
     def create_task_buttons(self, task_item, task_id, is_finished, is_running):
         """Create action buttons for a task"""
+
         # Create a widget to hold the buttons
         button_widget = QWidget()
         button_layout = QHBoxLayout()
@@ -186,22 +226,24 @@ class TimeTrackerApp(QMainWindow):
             reopen_btn.clicked.connect(lambda: self.reopen_task(task_id))
             button_layout.addWidget(reopen_btn)
         else:
-            # Show Start/Pause and Finish buttons for active tasks
+            # Show Pause and Finish buttons for active tasks
             if is_running:
                 pause_btn = QPushButton("Pause")           
                 pause_btn.setObjectName("primary")
                 pause_btn.clicked.connect(lambda: self.pause_task(task_id))
                 button_layout.addWidget(pause_btn)
+
+                finish_btn = QPushButton("Finish")           
+                finish_btn.setObjectName("primary")
+                finish_btn.clicked.connect(lambda: self.finish_task(task_id))
+                button_layout.addWidget(finish_btn)
             else:
                 start_btn = QPushButton("Start")                
                 start_btn.setObjectName("primary")
                 start_btn.clicked.connect(lambda: self.start_task(task_id))
                 button_layout.addWidget(start_btn)
             
-            finish_btn = QPushButton("Finish")           
-            finish_btn.setObjectName("primary")
-            finish_btn.clicked.connect(lambda: self.finish_task(task_id))
-            button_layout.addWidget(finish_btn)
+            
         
         return button_widget
 
@@ -282,9 +324,10 @@ class TimeTrackerApp(QMainWindow):
             self.task_elapsed_before_start = 0
             self.running_task_item = None
         
+        
         # Mark as finished AND not running
         self.db.finish_task(task_id)
-        #self.db.pause_task(task_id)  # Make sure it's not marked as running
+        self.db.pause_task(task_id)  # Make sure it's not marked as running
         
         # Refresh UI
         self.load_projects()
@@ -292,6 +335,15 @@ class TimeTrackerApp(QMainWindow):
 
     def reopen_task(self, task_id):
         """Reopen a finished task"""
+        running_task = self.db.get_running_task()
+        if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+
         self.db.reopen_task(task_id)
         self.db.pause_task(task_id)  # Make sure it starts as paused, not running
         self.load_projects()
@@ -314,6 +366,15 @@ class TimeTrackerApp(QMainWindow):
 
     def rename_task(self, task_id, old_name):
         """Rename a task"""
+        running_task = self.db.get_running_task()
+        if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+
         new_name, ok = QInputDialog.getText(
             self,
             "Rename Task",
@@ -328,6 +389,15 @@ class TimeTrackerApp(QMainWindow):
 
     def delete_task(self, task_id, task_name):
         """Delete a task"""
+        running_task = self.db.get_running_task()
+        if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+
         # Check if this task is currently running
         if self.running_task_id == task_id:
             QMessageBox.warning(
@@ -613,6 +683,16 @@ class TimeTrackerApp(QMainWindow):
     # ===== EXPORTING =====
 
     def export_to_csv(self):
+        # Check if another task is already running
+        running_task = self.db.get_running_task()
+        if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+
         """Export all projects and tasks to CSV (.csv)"""
         file_path, _ = QFileDialog.getSaveFileName(
             self,
@@ -702,6 +782,16 @@ class TimeTrackerApp(QMainWindow):
 
     def export_to_excel(self):
         """Export all projects and tasks to Excel (.xlsx)"""
+        # Check if another task is already running
+        running_task = self.db.get_running_task()
+        if running_task:
+            QMessageBox.warning(
+                self, 
+                "Task Running", 
+                f"Please pause or finish the currently running task first:\n{running_task[2]}"
+            )
+            return
+
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Export to Excel",
