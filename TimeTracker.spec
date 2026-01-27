@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('ui', 'ui'), ('assets/stopwatch.ico', 'assets')],
+    datas=[('ui', 'ui'), ('assets', 'assets'), ('styles', 'styles')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

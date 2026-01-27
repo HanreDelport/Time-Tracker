@@ -37,11 +37,12 @@ class TimeTrackerApp(QMainWindow):
         self.setWindowIcon(QIcon("assets/stopwatch.png")) 
 
         # Load the UI file
-        uic.loadUi('ui/main_window.ui', self)
+        uic.loadUi(resource_path('ui/main_window.ui'), self)
         
          # Set window icon
-        if os.path.exists('assets/stopwatch.ico'):
-            self.setWindowIcon(QIcon('assets/stopwatch.ico'))
+        icon_path = resource_path('assets/stopwatch.ico')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
 
         self.projectTreeWidget.setUniformRowHeights(True)
         self.projectTreeWidget.setIndentation(18)
@@ -91,7 +92,7 @@ class TimeTrackerApp(QMainWindow):
             return
 
        # Load the dialog UI
-       dialog = uic.loadUi('ui/add_project_dialog.ui')
+       dialog = uic.loadUi(resource_path('ui/add_project_dialog.ui'))
        dialog.buttonBox.accepted.connect(dialog.accept)
        dialog.buttonBox.rejected.connect(dialog.reject)
        
@@ -191,7 +192,7 @@ class TimeTrackerApp(QMainWindow):
             return
         
         # Load the dialog UI
-        dialog = uic.loadUi('ui/add_task_dialog.ui')
+        dialog = uic.loadUi(resource_path('ui/add_task_dialog.ui'))
         dialog.buttonBox.accepted.connect(dialog.accept)
         dialog.buttonBox.rejected.connect(dialog.reject)
         
@@ -926,7 +927,7 @@ class TimeTrackerApp(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon("assets/stopwatch.ico")) 
+    app.setWindowIcon(QIcon(resource_path("assets/stopwatch.ico")))
     with open(resource_path("styles/app.qss"), "r") as f:
         app.setStyleSheet(f.read())
     window = TimeTrackerApp()
