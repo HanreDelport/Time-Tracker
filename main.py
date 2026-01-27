@@ -27,8 +27,17 @@ class TimeTrackerApp(QMainWindow):
 
         # Load the UI file
         uic.loadUi('ui/main_window.ui', self)
+        
+         # Set window icon
+        from PyQt6.QtGui import QIcon
+        import os
+        if os.path.exists('icon.ico'):
+            self.setWindowIcon(QIcon('icon.ico'))
+
         self.projectTreeWidget.setUniformRowHeights(True)
         self.projectTreeWidget.setIndentation(18)
+
+
         
         # Initialize database manager
         self.db = DatabaseManager()
