@@ -5,9 +5,9 @@ echo.
 pyinstaller --name="TimeTracker" ^
     --windowed ^
     --onefile ^
-    --icon=icon.ico ^
+    --icon=assets/stopwatch.ico ^
     --add-data="ui;ui" ^
-    --add-data="icon.ico;." ^
+    --add-data="assets/stopwatch.ico;assets" ^
     main.py
 
 echo.

@@ -29,8 +29,8 @@ class TimeTrackerApp(QMainWindow):
         uic.loadUi('ui/main_window.ui', self)
         
          # Set window icon
-        if os.path.exists('assets/stopwatch.png'):
-            self.setWindowIcon(QIcon('assets/stopwatch.png'))
+        if os.path.exists('assets/stopwatch.ico'):
+            self.setWindowIcon(QIcon('assets/stopwatch.ico'))
 
         self.projectTreeWidget.setUniformRowHeights(True)
         self.projectTreeWidget.setIndentation(18)
