@@ -27,6 +27,7 @@ def create_database():
             name TEXT NOT NULL,
             total_seconds INTEGER DEFAULT 0,
             is_finished INTEGER DEFAULT 0,
+            is_running INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
         )
