@@ -12,24 +12,6 @@ from openpyxl.styles import Font
 import os
 import ctypes
 
-
-import traceback
-import logging
-
-# Setup logging to file
-logging.basicConfig(
-    filename='time_tracker_debug.log',
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-
-# Also log uncaught exceptions
-def exception_hook(exctype, value, tb):
-    logging.error('Uncaught exception:', exc_info=(exctype, value, tb))
-    sys.__excepthook__(exctype, value, tb)
-
-sys.excepthook = exception_hook
-
 # ===== GET RESOURCE PATH =====
 
 def resource_path(relative_path):
@@ -100,9 +82,7 @@ class TimeTrackerApp(QMainWindow):
 
     def add_project(self):
         """Handler for Add Project button"""
-        try:
-            logging.info("add_project called")
-            
+        try:            
             running_task = self.db.get_running_task()
             if running_task:
                 QMessageBox.warning(
@@ -111,26 +91,19 @@ class TimeTrackerApp(QMainWindow):
                     f"Please pause or finish the currently running task first:\n{running_task[2]}"
                 )
                 return
-
-            logging.info("About to load dialog UI")
             
             # Load the dialog UI
             dialog = QDialog(self)
             uic.loadUi(resource_path('ui/add_project_dialog.ui'), dialog)
             
-            logging.info("Dialog UI loaded successfully")
-            
             dialog.buttonBox.accepted.connect(dialog.accept)
             dialog.buttonBox.rejected.connect(dialog.reject)
-            
-            logging.info("About to show dialog")
             
             # Show the dialog and wait for user response
             if dialog.exec() == QDialog.DialogCode.Accepted:
                 # Get the project name from the line edit
                 project_name = dialog.projectNameLineEdit.text().strip()
                 
-                logging.info(f"Dialog accepted with name: {project_name}")
                 
                 if project_name:
                     # Add to database
@@ -158,7 +131,6 @@ class TimeTrackerApp(QMainWindow):
                     dialog.reject()
                     
         except Exception as e:
-            logging.error(f"Error in add_project: {str(e)}", exc_info=True)
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
 
@@ -967,6 +939,18 @@ if __name__ == '__main__':
     app.setWindowIcon(QIcon(resource_path("assets/stopwatch.ico")))
     with open(resource_path("styles/app.qss"), "r") as f:
         app.setStyleSheet(f.read())
+
+        # Replace relative paths with absolute paths for PyInstaller
+        stylesheet = stylesheet.replace(
+            "url(assets/arrowRight.svg)", 
+            f"url({resource_path('assets/arrowRight.svg').replace(chr(92), '/')})"
+        )
+        stylesheet = stylesheet.replace(
+            "url(assets/arrowDown.svg)", 
+            f"url({resource_path('assets/arrowDown.svg').replace(chr(92), '/')})"
+        )
+        
+        app.setStyleSheet(stylesheet)
     window = TimeTrackerApp()
     window.show()
     sys.exit(app.exec())
