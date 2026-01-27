@@ -92,7 +92,8 @@ class TimeTrackerApp(QMainWindow):
             return
 
        # Load the dialog UI
-       dialog = uic.loadUi(resource_path('ui/add_project_dialog.ui'))
+       dialog = QDialog(self)
+       uic.loadUi(resource_path('ui/add_project_dialog.ui'), dialog)
        dialog.buttonBox.accepted.connect(dialog.accept)
        dialog.buttonBox.rejected.connect(dialog.reject)
        
@@ -192,7 +193,8 @@ class TimeTrackerApp(QMainWindow):
             return
         
         # Load the dialog UI
-        dialog = uic.loadUi(resource_path('ui/add_task_dialog.ui'))
+        dialog = QDialog(self)
+        uic.loadUi(resource_path('ui/add_task_dialog.ui'), dialog)
         dialog.buttonBox.accepted.connect(dialog.accept)
         dialog.buttonBox.rejected.connect(dialog.reject)
         
