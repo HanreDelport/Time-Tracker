@@ -7,7 +7,8 @@ pyinstaller --name="TimeTracker" ^
     --onefile ^
     --icon=assets/stopwatch.ico ^
     --add-data="ui;ui" ^
-    --add-data="assets/stopwatch.ico;assets" ^
+    --add-data="assets;assets" ^
+    --add-data="styles;styles" ^
     main.py
 
 echo.

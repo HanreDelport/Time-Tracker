@@ -12,6 +12,17 @@ from openpyxl.styles import Font
 import os
 import ctypes
 
+# ===== GET RESOURCE PATH =====
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and PyInstaller """
+    try:
+        base_path = sys._MEIPASS  # PyInstaller temp folder
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 class TimeTrackerApp(QMainWindow):
 
     #INIT FUNCTION
@@ -916,7 +927,7 @@ class TimeTrackerApp(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("assets/stopwatch.ico")) 
-    with open("styles/app.qss", "r") as f:
+    with open(resource_path("styles/app.qss"), "r") as f:
         app.setStyleSheet(f.read())
     window = TimeTrackerApp()
     window.show()
