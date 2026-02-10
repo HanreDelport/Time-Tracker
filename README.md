@@ -102,7 +102,7 @@ The `build_exe.bat` script uses PyInstaller with the following options:
 1. **Create a Project**
    - Click the "Add Project" button in the toolbar
    - Enter a project name and click OK
-   - 
+ 
 ![Time Tracker](screenshots/main.png)
 ![Time Tracker](screenshots/add_project.png)
 
@@ -121,7 +121,7 @@ The `build_exe.bat` script uses PyInstaller with the following options:
    - Click "Pause" to temporarily stop the timer
    - Click "Start" again to resume from where you left off
    - Tracking more than one task at a time is not allowed
-   - 
+   
 ![Time Tracker](screenshots/tree_view_uncompleted.png)
 ![Time Tracker](screenshots/task_running.png)
 ![Time Tracker](screenshots/error.png)
@@ -129,7 +129,7 @@ The `build_exe.bat` script uses PyInstaller with the following options:
 4. **Finish Tasks**
    - Click "Finish" when a task is complete
    - Finished tasks can be reopened later if needed
-   - 
+
 ![Time Tracker](screenshots/tree_view_completed.png)
 
 5. **Edit Tasks**
