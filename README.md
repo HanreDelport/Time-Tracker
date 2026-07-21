@@ -2,6 +2,8 @@
 
 A desktop application for tracking work hours across projects and tasks. Built with Python and PyQt6, this lightweight tool helps you monitor time spent on different activities with a clean, intuitive interface.
 
+---
+
 ## Features
 
 ### Core Functionality
@@ -31,10 +33,14 @@ A desktop application for tracking work hours across projects and tasks. Built w
 - **Task Validation**: Prevents starting multiple tasks simultaneously
 - **Delete Protection**: Cannot delete a currently running task
 
+---
+
 ## Requirements
 
 - Windows 10 or later
 - Python 3.10+ (for running from source)
+
+---
 
 ## Installation
 
@@ -62,6 +68,8 @@ A desktop application for tracking work hours across projects and tasks. Built w
    ```bash
    python main.py
    ```
+
+   ---
 
 ## Building the Executable
 
@@ -94,6 +102,8 @@ The `build_exe.bat` script uses PyInstaller with the following options:
 - `--icon=icon.ico`: Application icon
 - `--add-data="ui;ui"`: Include UI files
 - `--add-data="icon.ico;."`: Include icon in the build
+
+---
 
 ## Usage Guide
 
@@ -170,6 +180,8 @@ The file includes:
 - All tasks with individual times
 - Task status (Running, Paused, Finished)
 
+---
+
 ## Project Structure
 
 ```
@@ -188,6 +200,8 @@ TimeTracker/
 └── exports/                  # Default location for CSV exports
 ```
 
+---
+
 ## Database Schema
 
 ### Projects Table
@@ -204,6 +218,8 @@ TimeTracker/
 - `is_running`: Boolean flag (0 or 1)
 - `created_at`: Timestamp
 
+---
+
 ## Technology Stack
 
 - **Language**: Python 3.10+
@@ -211,6 +227,8 @@ TimeTracker/
 - **Database**: SQLite3
 - **UI Design**: Qt Designer
 - **Packaging**: PyInstaller
+
+---
 
 ## Icon Attributions
 
@@ -229,6 +247,8 @@ TimeTracker/
 - Source: https://www.flaticon.com/free-icons/double-arrow
 - License: Flaticon Free License
 
+---
+
 ## License
 
 **Copyright © 2026 [Hanré Delport]. All rights reserved.**
@@ -241,9 +261,13 @@ This software is provided for personal, non-commercial use only.
 - ❌ **Prohibited**: Commercial use, distribution for profit, incorporation into commercial products
 - 📧 **Commercial Licensing**: For commercial use or redistribution, please contact [hanredelport@gmail.com]
 
+---
+
 ## Contributing
 
 This is a personal project, but suggestions and bug reports are welcome! Please open an issue on GitHub.
+
+---
 
 ## Future Features (Roadmap)
 
